@@ -105,9 +105,11 @@ export const edithotel = async (id, hotelName, location, pricePerNight, availabl
   }
 };
 
-export const handleflightbooking = async (userId, flightId, seats, price) => {
+// Inside src/api/index.js, update these two functions:
+
+export const handleflightbooking = async (userId, flightId, seats, price, selectedSeat = "") => {
   try {
-    const url = `${BACKEND_URL}/booking/flight?userId=${userId}&flightId=${flightId}&seats=${seats}&price=${price}`;
+    const url = `${BACKEND_URL}/booking/flight?userId=${userId}&flightId=${flightId}&seats=${seats}&price=${price}&selectedSeat=${selectedSeat}`;
     const res = await axios.post(url);
     return res.data;
   } catch (error) {
@@ -115,10 +117,9 @@ export const handleflightbooking = async (userId, flightId, seats, price) => {
   }
 };
 
-export const handlehotelbooking = async (userId, hotelId, rooms, price) => {
+export const handlehotelbooking = async (userId, hotelId, rooms, price, selectedRoom = "") => {
   try {
-    // Fixed: changed from /booking/flight to /booking/hotel
-    const url = `${BACKEND_URL}/booking/hotel?userId=${userId}&hotelId=${hotelId}&rooms=${rooms}&price=${price}`;
+    const url = `${BACKEND_URL}/booking/hotel?userId=${userId}&hotelId=${hotelId}&rooms=${rooms}&price=${price}&selectedRoom=${selectedRoom}`;
     const res = await axios.post(url);
     return res.data;
   } catch (error) {
@@ -195,3 +196,4 @@ export const getLiveFlightStatus = async (flightId) => {
     return null;
   }
 };
+

@@ -32,7 +32,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// --- NEW COMPONENT: Visual Timeline Tracker ---
+// --- VISUAL TIMELINE TRACKER ---
 const RefundTimeline = ({ status }: { status: string }) => {
   const getProgressWidth = () => {
     if (status === "COMPLETED") return "100%";
@@ -262,10 +262,7 @@ const index = () => {
                     <p>{user?.phoneNumber}</p>
                   </div>
                   
-                  {/* Action Buttons Container */}
                   <div className="pt-4 border-t border-gray-100 space-y-3">
-                    
-                    {/* General Main Dashboard Button */}
                     <button
                       className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
                       onClick={() => router.push("/")}
@@ -274,7 +271,6 @@ const index = () => {
                       <span>Main Dashboard</span>
                     </button>
 
-                    {/* Admin Dashboard Button - Only visible to ADMIN users */}
                     {user?.role === "ADMIN" && (
                       <button
                         className="w-full flex items-center justify-center space-x-2 bg-gray-800 text-white py-2.5 rounded-lg hover:bg-gray-900 transition-colors font-medium shadow-sm"
@@ -449,6 +445,19 @@ const index = () => {
                 <span className="text-gray-500 text-sm">Total Price Paid</span>
                 <span className="font-bold text-gray-900">₹ {viewBooking.totalPrice?.toLocaleString("en-IN")}</span>
               </div>
+              
+              {/* ---> ADDED SEAT AND ROOM SELECTION BLOCK <--- */}
+              <div className="flex justify-between items-center py-3 my-2 border border-blue-100 bg-blue-50 px-3 rounded-lg">
+                <span className="text-blue-800 text-sm font-semibold flex items-center">
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  {viewBooking.type === "Flight" ? "Selected Seat" : "Selected Room"}
+                </span>
+                <span className="font-black text-blue-900 text-lg">
+                  {viewBooking.type === "Flight" ? viewBooking.selectedSeat || 'Auto-Assigned' : viewBooking.selectedRoom || 'Standard Room'}
+                </span>
+              </div>
+              {/* --------------------------------------------- */}
+
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-gray-500 text-sm">Current Status</span>
                 <span className={`font-bold px-2 py-1 rounded-md text-xs ${viewBooking.status === "CANCELLED" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
