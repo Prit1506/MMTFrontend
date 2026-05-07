@@ -272,57 +272,95 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-4 text-white">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">
               Search Results
             </h2>
             {searchresults.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {searchresults.map((result) => (
                   <div
                     key={result.id}
-                    className="bg-white rounded-lg shadow p-4 border border-gray-200"
+                    className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg transition-shadow"
                   >
-                    {bookingtype === "flights" ? (
-                      <>
-                        <p className="font-semibold text-lg">
-                          Flight Name: {result.flightName}
-                        </p>
-                        <h3 className="font-semibold text-lg">
-                          {result.from} to {result.to}
-                        </h3>
-                        <p className="text-gray-600">
-                          Departure Time: {formatDate(result.departureTime)}
-                        </p>
-                        <p className="text-gray-600">
-                          Arrival Time: {formatDate(result.arrivalTime)}
-                        </p>
-                        <p className="text-lg font-bold mt-2">
-                          ₹{result.price}
-                        </p>
-                        <Button
-                          className="w-full mt-4"
-                          onClick={() => handlebooknow(result.id)}
-                        >
-                          Book Now
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <h3 className="font-semibold text-lg">
-                          {result.hotelName}
-                        </h3>
-                        <p className="text-gray-600">City: {result.location}</p>
-                        <p className="text-lg font-bold mt-2">
-                          ₹{result.pricePerNight} per night
-                        </p>
-                        <Button
-                          className="w-full mt-4"
-                          onClick={() => handlebooknow(result.id)}
-                        >
-                          Book Now
-                        </Button>
-                      </>
-                    )}
+                    {/* Attractive Image Header - Dynamic based on search type */}
+                    <div className="h-48 w-full relative">
+                      <img 
+                        src={bookingtype === "flights" 
+                          ? "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600" 
+                          : "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600"} 
+                        alt={bookingtype === "flights" ? "Flight Result" : "Hotel Result"} 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1 rounded text-xs font-bold text-gray-800 shadow-sm flex items-center">
+                        {bookingtype === "flights" ? <Plane className="w-3 h-3 mr-1 text-blue-600" /> : <Hotel className="w-3 h-3 mr-1 text-blue-600" />}
+                        {bookingtype === "flights" ? "Flight" : "Hotel"}
+                      </div>
+                    </div>
+                    
+                    <div className="p-5 flex-1 flex flex-col justify-between">
+                      {bookingtype === "flights" ? (
+                        <>
+                          <div>
+                            <p className="text-sm text-gray-500 font-medium mb-1">
+                              {result.flightName}
+                            </p>
+                            <h3 className="font-bold text-xl text-gray-900 mb-3">
+                              {result.from} <span className="text-gray-400 font-normal mx-1">to</span> {result.to}
+                            </h3>
+                            <div className="space-y-1 mb-4">
+                              <p className="text-sm text-gray-600 flex items-center">
+                                <Plane className="w-4 h-4 mr-2 text-gray-400" />
+                                Departs: {formatDate(result.departureTime)}
+                              </p>
+                              <p className="text-sm text-gray-600 flex items-center">
+                                <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                                Arrives: {formatDate(result.arrivalTime)}
+                              </p>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-end mb-4 border-t border-gray-100 pt-4">
+                              <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Price</span>
+                              <p className="text-2xl font-black text-blue-600">
+                                ₹{result.price}
+                              </p>
+                            </div>
+                            <Button
+                              className="w-full bg-gray-900 hover:bg-black text-white"
+                              onClick={() => handlebooknow(result.id)}
+                            >
+                              Book Now
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <h3 className="font-bold text-xl text-gray-900 mb-2 line-clamp-1">
+                              {result.hotelName}
+                            </h3>
+                            <p className="text-sm text-gray-600 flex items-center mb-4">
+                              <MapPin className="w-4 h-4 mr-1 text-gray-400" />
+                              City: {result.location}
+                            </p>
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-end mb-4 border-t border-gray-100 pt-4">
+                              <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Per night</span>
+                              <p className="text-2xl font-black text-blue-600">
+                                ₹{result.pricePerNight}
+                              </p>
+                            </div>
+                            <Button
+                              className="w-full bg-gray-900 hover:bg-black text-white"
+                              onClick={() => handlebooknow(result.id)}
+                            >
+                              Book Now
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

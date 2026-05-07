@@ -19,7 +19,9 @@ import {
   LayoutDashboard,
   Home,
   FileText,
-  Activity
+  Activity,
+  Snowflake,
+  ArrowRight
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
@@ -32,7 +34,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// --- VISUAL TIMELINE TRACKER ---
 const RefundTimeline = ({ status }: { status: string }) => {
   const getProgressWidth = () => {
     if (status === "COMPLETED") return "100%";
@@ -89,7 +90,6 @@ const RefundTimeline = ({ status }: { status: string }) => {
     </div>
   );
 };
-// ----------------------------------------------
 
 const index = () => {
   const dispatch = useDispatch();
@@ -111,12 +111,10 @@ const index = () => {
 
   const [editForm, setEditForm] = useState({ ...userData });
   
-  // Cancellation State
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [cancelReason, setCancelReason] = useState("");
 
-  // Booking Details State
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [viewBooking, setViewBooking] = useState<any>(null);
 
@@ -166,10 +164,10 @@ const index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-8 px-4">
+    <div className="min-h-screen bg-gray-50 pt-8 px-4 pb-16">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Profile Section */}
+          
           <div className="md:col-span-1">
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="flex justify-between items-start mb-6">
@@ -294,7 +292,6 @@ const index = () => {
             </div>
           </div>
 
-          {/* Bookings Section */}
           <div className="md:col-span-2">
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold mb-6">My Bookings</h2>
@@ -349,7 +346,6 @@ const index = () => {
                         </div>
                       </div>
 
-                      {/* Status and Action Area */}
                       <div className="mt-4 pt-4 border-t">
                         {booking.status === "CANCELLED" ? (
                           <div className="bg-red-50 p-4 pb-2 rounded-lg flex flex-col">
@@ -409,11 +405,64 @@ const index = () => {
                 )}
               </div>
             </div>
+
+            {/* --- NEW: ACTIVE PRICE FREEZES SECTION --- */}
+            {user?.priceFreezes && user.priceFreezes.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
+                <h2 className="text-2xl font-bold mb-6">Active Price Freezes</h2>
+                <div className="space-y-6">
+                  {user.priceFreezes.map((freeze: any, idx: number) => {
+                    const isFlight = freeze.type?.toUpperCase() === "FLIGHT";
+                    return (
+                      <div key={idx} className="border border-blue-200 bg-blue-50 rounded-xl p-5 relative overflow-hidden shadow-sm">
+                        <div className="flex items-start justify-between">
+                           <div className="flex items-center space-x-4">
+                             <div className="p-3 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                               {isFlight ? <Plane className="w-6 h-6" /> : <Building2 className="w-6 h-6" />}
+                             </div>
+                             <div>
+                               <h3 className="font-bold text-blue-900 capitalize">{freeze.type.toLowerCase()} Freeze</h3>
+                               <p className="text-xs text-blue-700 mt-1 flex items-center">
+                                 ID: <span className="font-mono ml-1">{freeze.targetId}</span>
+                               </p>
+                             </div>
+                           </div>
+                           <div className="text-right">
+                             <p className="font-black text-blue-900 text-2xl">₹ {freeze.lockedPrice.toLocaleString("en-IN")}</p>
+                             <p className="text-xs font-semibold text-blue-700">Locked Base Price</p>
+                           </div>
+                        </div>
+                        
+                        <div className="mt-5 pt-4 border-t border-blue-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <div className="text-xs text-blue-800 font-medium space-y-1">
+                            <div>Holding Fee Paid: ₹ 199</div>
+                            <div className="flex items-center text-orange-600">
+                              <Clock className="w-4 h-4 mr-1" />
+                              Expires: {new Date(freeze.expiryTimestamp).toLocaleString("en-IN")}
+                            </div>
+                          </div>
+                          
+                          {/* Navigate to the correct booking page based on targetId and type */}
+                          <button 
+                            onClick={() => router.push(isFlight ? `/book-flight/${freeze.targetId}` : `/book-hotel/${freeze.targetId}`)}
+                            className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow hover:bg-blue-700 transition-colors flex items-center w-full sm:w-auto justify-center"
+                          >
+                            <span>Book at Locked Price</span>
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {/* ----------------------------------------- */}
+
           </div>
         </div>
       </div>
 
-      {/* Booking Details Dialog */}
       <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
         <DialogContent className="bg-white sm:max-w-md">
           <DialogHeader>
@@ -446,7 +495,6 @@ const index = () => {
                 <span className="font-bold text-gray-900">₹ {viewBooking.totalPrice?.toLocaleString("en-IN")}</span>
               </div>
               
-              {/* ---> ADDED SEAT AND ROOM SELECTION BLOCK <--- */}
               <div className="flex justify-between items-center py-3 my-2 border border-blue-100 bg-blue-50 px-3 rounded-lg">
                 <span className="text-blue-800 text-sm font-semibold flex items-center">
                   <CheckCircle2 className="w-4 h-4 mr-2" />
@@ -456,7 +504,6 @@ const index = () => {
                   {viewBooking.type === "Flight" ? viewBooking.selectedSeat || 'Auto-Assigned' : viewBooking.selectedRoom || 'Standard Room'}
                 </span>
               </div>
-              {/* --------------------------------------------- */}
 
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-gray-500 text-sm">Current Status</span>
@@ -465,7 +512,6 @@ const index = () => {
                 </span>
               </div>
 
-              {/* LIVE TRACKING BANNER FOR CONFIRMED FLIGHTS */}
               {viewBooking.type === "Flight" && viewBooking.status !== "CANCELLED" && (
                 <div className="bg-blue-50 p-4 rounded-lg mt-4 border border-blue-100 flex items-center justify-between">
                   <div>
@@ -483,7 +529,6 @@ const index = () => {
                 </div>
               )}
 
-              {/* CANCELLATION INFO FOR CANCELLED BOOKINGS */}
               {viewBooking.status === "CANCELLED" && (
                 <div className="bg-red-50 p-4 rounded-lg mt-4 border border-red-100">
                   <h4 className="font-bold text-red-800 mb-2 border-b border-red-200 pb-2">Cancellation Info</h4>
@@ -516,7 +561,6 @@ const index = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Cancellation Dialog */}
       <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
         <DialogContent className="bg-white sm:max-w-md">
           <DialogHeader>

@@ -139,7 +139,7 @@ const Footer = () => {
               </a>
             </div>
             <p className="text-sm">
-              © 2024 MakeMyTour PVT. LTD. All rights reserved
+              © 2026 MakeMyTour PVT. LTD. All rights reserved
             </p>
           </div>
         </div>

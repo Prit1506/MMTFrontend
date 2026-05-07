@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
-import { Star, MapPin, CreditCard, Ticket, Home, ChevronRight, Check } from "lucide-react";
+import { Star, MapPin, CreditCard, Ticket, Home, ChevronRight, Check, TrendingUp, Snowflake, BarChart3, Info } from "lucide-react";
 import { useEffect, useState } from "react";
-import { gethotel, handlehotelbooking } from "@/api";
+import { gethotel, handlehotelbooking, handlePriceFreezeApi } from "@/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,6 +24,8 @@ const BookHotelPage = () => {
   const user = useSelector((state: any) => state.user.user);
   const dispatch = useDispatch();
 
+  const [priceHistory, setPriceHistory] = useState([2200, 2100, 2400, 2600, 2900, 3100, 3300]);
+
   useEffect(() => {
     const fetchhotels = async () => {
       try {
@@ -43,9 +45,17 @@ const BookHotelPage = () => {
   if (hotels.length === 0) return <div>No hotel data available.</div>;
 
   const hotel = hotels[0];
-  const basePrice = hotel?.pricePerNight;
+  
+  // --- FIX: Read frozen price directly from the user's database profile ---
+  const frozenRecord = user?.priceFreezes?.find((freeze: any) => freeze.targetId === id);
+  const isPriceFrozen = !!frozenRecord;
 
-  // Dynamic Room Types Matrix
+  const rawBasePrice = hotel?.pricePerNight;
+  const demandModifier = 1.20; 
+  // Use the exact locked price from the database if frozen
+  const basePrice = isPriceFrozen ? frozenRecord.lockedPrice : Math.round(rawBasePrice * demandModifier);
+  // -------------------------------------------------------------------------
+
   const roomTypes = [
     {
       name: "Standard Room",
@@ -83,6 +93,17 @@ const BookHotelPage = () => {
     }
   };
 
+  const handlePriceFreeze = async () => {
+    if (!user) return alert("Please login to freeze prices.");
+    try {
+      const updatedUser = await handlePriceFreezeApi(user.id, hotel.id, "HOTEL", basePrice);
+      dispatch(setUser(updatedUser));
+      alert("Price frozen successfully for 24 hours! A holding fee of ₹199 has been applied.");
+    } catch (error) {
+      alert("Failed to freeze price. Please make sure backend is running.");
+    }
+  };
+
   const HotelContent = () => (
     <DialogContent className="sm:max-w-[800px] bg-white max-h-[90vh] overflow-y-auto">
       <DialogHeader>
@@ -92,7 +113,6 @@ const BookHotelPage = () => {
       </DialogHeader>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
-        {/* Room Selection Matrix */}
         <div className="space-y-4">
           {roomTypes.map((room) => (
             <div 
@@ -119,7 +139,6 @@ const BookHotelPage = () => {
           ))}
         </div>
 
-        {/* Fare Summary */}
         <div className="bg-gray-100 rounded-xl p-6 flex flex-col justify-between">
           <div>
             <h3 className="text-lg font-bold mb-4 flex items-center"><CreditCard className="w-5 h-5 mr-2" />Fare Summary</h3>
@@ -175,6 +194,54 @@ const BookHotelPage = () => {
               </div>
             </div>
 
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold flex items-center">
+                  <BarChart3 className="w-5 h-5 mr-2 text-blue-600" /> Price Insights
+                </h3>
+                {isPriceFrozen ? (
+                  <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold flex items-center">
+                    <Snowflake className="w-3 h-3 mr-1" /> Price Frozen
+                  </span>
+                ) : (
+                  <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold flex items-center">
+                    <TrendingUp className="w-3 h-3 mr-1" /> High Demand (+20%)
+                  </span>
+                )}
+              </div>
+              
+              <p className="text-sm text-gray-600 mb-6">
+                {isPriceFrozen 
+                  ? "You have successfully locked in this price. It will not increase for the next 24 hours."
+                  : "Prices for this hotel are currently higher than usual due to upcoming holiday travel. We recommend booking soon or freezing the price."}
+              </p>
+
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <p className="text-xs font-semibold text-gray-500 mb-4 uppercase tracking-wider">7-Day Price History</p>
+                <div className="h-32 flex items-end justify-between space-x-2">
+                  {priceHistory.map((price, idx) => {
+                    const maxPrice = Math.max(...priceHistory);
+                    const heightPercent = (price / maxPrice) * 100;
+                    const isToday = idx === priceHistory.length - 1;
+                    return (
+                      <div key={idx} className="w-full flex flex-col items-center group relative">
+                        <div className="absolute -top-8 bg-gray-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                          ₹ {price}
+                        </div>
+                        <div 
+                          className={`w-full rounded-t-sm transition-all duration-300 ${isToday ? 'bg-blue-600' : 'bg-blue-200 group-hover:bg-blue-300'}`}
+                          style={{ height: `${heightPercent}%` }}
+                        ></div>
+                        <span className="text-[10px] text-gray-400 mt-2 font-medium">
+                          {isToday ? 'Today' : `Day ${idx + 1}`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
             <ReviewSection targetId={hotel.id} targetType="HOTEL" />
           </div>
 
@@ -186,9 +253,26 @@ const BookHotelPage = () => {
               <div className="space-y-2 mb-6 border-t pt-4">
                 <div className="flex items-center justify-between"><span className="text-gray-500">Starting from:</span></div>
                 <div className="flex items-center justify-between text-2xl font-bold">
+                  {!isPriceFrozen && <div className="text-xs text-red-500 line-through mr-2">₹ {rawBasePrice}</div>}
                   <span>₹ {basePrice.toLocaleString()} <span className="text-sm font-normal text-gray-500">/ night</span></span>
                 </div>
               </div>
+
+              {!isPriceFrozen && (
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6">
+                  <div className="flex items-start mb-3">
+                    <Info className="w-4 h-4 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
+                    <p className="text-xs text-blue-800 font-medium">Not ready to book? Protect yourself from price surges.</p>
+                  </div>
+                  <button 
+                    onClick={handlePriceFreeze}
+                    className="w-full bg-white text-blue-700 border border-blue-200 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-100 transition-colors flex items-center justify-center shadow-sm"
+                  >
+                    <Snowflake className="w-4 h-4 mr-2 text-blue-500" />
+                    Freeze Price for 24h (₹ 199)
+                  </button>
+                </div>
+              )}
 
               <Dialog open={open} onOpenChange={setopem}>
                 <DialogTrigger asChild>

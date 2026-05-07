@@ -197,3 +197,16 @@ export const getLiveFlightStatus = async (flightId) => {
   }
 };
 
+
+// Add this to your src/api/index.js
+
+export const handlePriceFreezeApi = async (userId, targetId, type, price) => {
+  try {
+    const url = `${BACKEND_URL}/booking/freeze?userId=${userId}&targetId=${targetId}&type=${type}&price=${price}`;
+    const res = await axios.post(url);
+    return res.data; // Returns the updated User object containing the new freeze
+  } catch (error) {
+    console.error("Error freezing price:", error);
+    throw error;
+  }
+};
