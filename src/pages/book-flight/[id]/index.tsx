@@ -46,14 +46,13 @@ const BookFlightPage = () => {
 
   const flight = flights[0];
   
-  // --- FIX: Read frozen price directly from the user's database profile ---
   const frozenRecord = user?.priceFreezes?.find((freeze: any) => freeze.targetId === id);
   const isPriceFrozen = !!frozenRecord;
   
   const demandModifier = 1.15;
-  // Use the exact locked price from the database if frozen
+  
   const basePrice = isPriceFrozen ? frozenRecord.lockedPrice : Math.round(flight?.price * demandModifier);
-  // -------------------------------------------------------------------------
+  
 
   const rowNumber = parseInt(selectedSeat.replace(/\D/g, '')) || 0;
   const isPremiumSeat = rowNumber >= 1 && rowNumber <= 4;
