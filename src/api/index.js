@@ -105,7 +105,6 @@ export const edithotel = async (id, hotelName, location, pricePerNight, availabl
   }
 };
 
-// Inside src/api/index.js, update these two functions:
 
 export const handleflightbooking = async (userId, flightId, seats, price, selectedSeat = "") => {
   try {
@@ -138,7 +137,6 @@ export const cancelBooking = async (userId, bookingId, reason) => {
   }
 };
 
-// Add to the bottom of src/api/index.js
 
 export const getReviews = async (targetId, targetType) => {
   try {
@@ -185,7 +183,6 @@ export const flagReview = async (reviewId) => {
   }
 };
 
-// Add to the bottom of src/api/index.js
 
 export const getLiveFlightStatus = async (flightId) => {
   try {
@@ -198,8 +195,6 @@ export const getLiveFlightStatus = async (flightId) => {
 };
 
 
-// Add this to your src/api/index.js
-
 export const handlePriceFreezeApi = async (userId, targetId, type, price) => {
   try {
     const url = `${BACKEND_URL}/booking/freeze?userId=${userId}&targetId=${targetId}&type=${type}&price=${price}`;
@@ -207,6 +202,31 @@ export const handlePriceFreezeApi = async (userId, targetId, type, price) => {
     return res.data; // Returns the updated User object containing the new freeze
   } catch (error) {
     console.error("Error freezing price:", error);
+    throw error;
+  }
+};
+
+export const getRecommendations = async (userId = null) => {
+  try {
+    const url = userId
+      ? `${BACKEND_URL}/recommendations?userId=${userId}`
+      : `${BACKEND_URL}/recommendations`;
+    const res = await axios.get(url);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching recommendations:", error);
+    return [];
+  }
+};
+
+
+export const submitRecommendationFeedback = async (userId, targetId, targetType, helpful) => {
+  try {
+    const url = `${BACKEND_URL}/recommendations/feedback?userId=${userId}&targetId=${targetId}&targetType=${targetType}&helpful=${helpful}`;
+    const res = await axios.post(url);
+    return res.data;
+  } catch (error) {
+    console.error("Error submitting recommendation feedback:", error);
     throw error;
   }
 };

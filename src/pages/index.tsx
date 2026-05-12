@@ -3,6 +3,7 @@ import Loader from "@/components/Loader";
 import { SearchSelect } from "@/components/SearchSelect";
 import SignupDialog from "@/components/SignupDialog";
 import { Button } from "@/components/ui/button";
+import RecommendationSection from "@/components/RecommendationSection";
 import {
   Bus,
   Calendar,
@@ -371,6 +372,9 @@ export default function Home() {
             )}
           </div>
         </div>
+
+        <RecommendationSection />
+
         <div className="max-w-7xl mx-auto px-4">
           {/* Offers Section */}
           <section className="my-16">
