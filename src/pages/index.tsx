@@ -168,11 +168,12 @@ export default function Home() {
     return date.toLocaleString("en-US", options);
   };
 
+  // ── CHANGED: pass travelers count as query param ───────────────────────────
   const handlebooknow = (id: any) => {
     if (bookingtype === "flights") {
-      router.push(`/book-flight/${id}`);
+      router.push(`/book-flight/${id}?travelers=${travelers}`);
     } else {
-      router.push(`/book-hotel/${id}`);
+      router.push(`/book-hotel/${id}?travelers=${travelers}`);
     }
   };
 
@@ -252,20 +253,27 @@ export default function Home() {
               />
             </div>
 
+            {/* ── CHANGED: Travelers now has min=1 max=9 and shows a helpful subtitle ── */}
             <div className="col-span-1">
               <SearchInput
                 icon={<Users className="text-gray-400" />}
                 placeholder="Travelers"
                 value={travelers.toString()}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  settravelers(parseInt(e.target.value) || 1)
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const val = Math.max(1, Math.min(9, parseInt(e.target.value) || 1));
+                  settravelers(val);
+                }}
+                subtitle={
+                  bookingtype === "flights"
+                    ? `${travelers} seat${travelers > 1 ? "s" : ""} will be reserved`
+                    : `${Math.ceil(travelers / 2)} room${Math.ceil(travelers / 2) > 1 ? "s" : ""} suggested`
                 }
-                subtitle="Number of travelers"
                 type="number"
+                min={1}
+                max={9}
               />
             </div>
 
-            {/* This ensures the button ALWAYS stays on the far right column */}
             <div className="col-span-1 lg:col-start-5">
               <Button className="w-full h-full" onClick={handlesearch}>
                 SEARCH
@@ -283,21 +291,31 @@ export default function Home() {
                     key={result.id}
                     className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg transition-shadow"
                   >
-                    {/* Attractive Image Header - Dynamic based on search type */}
                     <div className="h-48 w-full relative">
-                      <img 
-                        src={bookingtype === "flights" 
-                          ? "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600" 
-                          : "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600"} 
-                        alt={bookingtype === "flights" ? "Flight Result" : "Hotel Result"} 
+                      <img
+                        src={
+                          bookingtype === "flights"
+                            ? "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600"
+                            : "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600"
+                        }
+                        alt={bookingtype === "flights" ? "Flight Result" : "Hotel Result"}
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1 rounded text-xs font-bold text-gray-800 shadow-sm flex items-center">
-                        {bookingtype === "flights" ? <Plane className="w-3 h-3 mr-1 text-blue-600" /> : <Hotel className="w-3 h-3 mr-1 text-blue-600" />}
+                        {bookingtype === "flights" ? (
+                          <Plane className="w-3 h-3 mr-1 text-blue-600" />
+                        ) : (
+                          <Hotel className="w-3 h-3 mr-1 text-blue-600" />
+                        )}
                         {bookingtype === "flights" ? "Flight" : "Hotel"}
                       </div>
+                      {/* ── CHANGED: show traveler badge on card ── */}
+                      <div className="absolute top-3 left-3 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm flex items-center">
+                        <Users className="w-3 h-3 mr-1" />
+                        {travelers} {bookingtype === "flights" ? `traveler${travelers > 1 ? "s" : ""}` : `guest${travelers > 1 ? "s" : ""}`}
+                      </div>
                     </div>
-                    
+
                     <div className="p-5 flex-1 flex flex-col justify-between">
                       {bookingtype === "flights" ? (
                         <>
@@ -306,7 +324,9 @@ export default function Home() {
                               {result.flightName}
                             </p>
                             <h3 className="font-bold text-xl text-gray-900 mb-3">
-                              {result.from} <span className="text-gray-400 font-normal mx-1">to</span> {result.to}
+                              {result.from}{" "}
+                              <span className="text-gray-400 font-normal mx-1">to</span>{" "}
+                              {result.to}
                             </h3>
                             <div className="space-y-1 mb-4">
                               <p className="text-sm text-gray-600 flex items-center">
@@ -320,17 +340,28 @@ export default function Home() {
                             </div>
                           </div>
                           <div>
-                            <div className="flex justify-between items-end mb-4 border-t border-gray-100 pt-4">
-                              <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Price</span>
+                            <div className="flex justify-between items-end mb-1 border-t border-gray-100 pt-4">
+                              <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">
+                                Price per person
+                              </span>
                               <p className="text-2xl font-black text-blue-600">
                                 ₹{result.price}
                               </p>
                             </div>
+                            {/* ── CHANGED: show total for all travelers ── */}
+                            {travelers > 1 && (
+                              <p className="text-right text-xs text-gray-500 mb-3">
+                                Total for {travelers} travelers ≈{" "}
+                                <span className="font-bold text-gray-700">
+                                  ₹{(result.price * travelers).toLocaleString()}
+                                </span>
+                              </p>
+                            )}
                             <Button
                               className="w-full bg-gray-900 hover:bg-black text-white"
                               onClick={() => handlebooknow(result.id)}
                             >
-                              Book Now
+                              Book {travelers > 1 ? `${travelers} Seats` : "Now"}
                             </Button>
                           </div>
                         </>
@@ -346,17 +377,25 @@ export default function Home() {
                             </p>
                           </div>
                           <div>
-                            <div className="flex justify-between items-end mb-4 border-t border-gray-100 pt-4">
-                              <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Per night</span>
+                            <div className="flex justify-between items-end mb-1 border-t border-gray-100 pt-4">
+                              <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">
+                                Per night / room
+                              </span>
                               <p className="text-2xl font-black text-blue-600">
                                 ₹{result.pricePerNight}
                               </p>
                             </div>
+                            {/* ── CHANGED: show suggested rooms for group ── */}
+                            {travelers > 1 && (
+                              <p className="text-right text-xs text-gray-500 mb-3">
+                                Suggested {Math.ceil(travelers / 2)} room{Math.ceil(travelers / 2) > 1 ? "s" : ""} for {travelers} guests
+                              </p>
+                            )}
                             <Button
                               className="w-full bg-gray-900 hover:bg-black text-white"
                               onClick={() => handlebooknow(result.id)}
                             >
-                              Book Now
+                              Book {travelers > 2 ? `${Math.ceil(travelers / 2)} Rooms` : "Now"}
                             </Button>
                           </div>
                         </>
@@ -376,7 +415,6 @@ export default function Home() {
         <RecommendationSection />
 
         <div className="max-w-7xl mx-auto px-4">
-          {/* Offers Section */}
           <section className="my-16">
             <h2 className="text-2xl font-bold mb-8 text-white">Best Offers</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -386,7 +424,6 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Collections Section */}
           <section className="my-16">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-bold text-white">
@@ -400,7 +437,6 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Wonders Section */}
           <section className="my-16">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-bold text-white">
@@ -414,7 +450,6 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Download App Section */}
           <DownloadApp />
         </div>
       </main>
@@ -530,6 +565,8 @@ function SearchInput({
   onChange,
   subtitle,
   type = "text",
+  min,
+  max,
 }: any) {
   return (
     <div className="border rounded-lg p-3 hover:border-blue-500 cursor-pointer h-full">
@@ -541,6 +578,8 @@ function SearchInput({
             type={type}
             value={value}
             onChange={onChange}
+            min={min}
+            max={max}
             className="font-semibold w-full bg-transparent outline-none"
             placeholder={placeholder}
           />
